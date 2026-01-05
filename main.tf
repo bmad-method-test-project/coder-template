@@ -31,6 +31,12 @@ variable "namespace" {
   description = "The Kubernetes namespace to create workspaces in (must exist prior to creating workspaces). If the Coder host is itself running as a Pod on the same Kubernetes cluster as you are deploying workspaces to, set this to the same namespace."
 }
 
+variable "bmad_cli_version" {
+  type        = string
+  description = "The version of BMAD to use."
+  default     = "latest"
+}
+
 data "coder_parameter" "cpu" {
   name         = "cpu"
   display_name = "CPU"
@@ -104,12 +110,61 @@ data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 
 resource "coder_agent" "main" {
+  # -- REQUIERED --
   os             = "linux"
   arch           = "amd64"
-  startup_script = <<-EOT
+
+  # --- OPTIONAL --
+  # Initialization script that runs when the agent starts.
+  startup_script = <<EOT
     set -e
+
+    # Ensure mise activates in terminals
+    touch "$HOME/.bashrc" "$HOME/.bash_profile"
+
+    grep -q 'mise activate bash' "$HOME/.bashrc" \
+      || echo 'eval "$(mise activate bash)"' >> "$HOME/.bashrc"
+    eval "$(mise activate bash)"
+
+    grep -q 'mise activate bash --shims' "$HOME/.bash_profile" \
+      || echo 'eval "$(mise activate bash --shims)"' >> "$HOME/.bash_profile"
+    eval "$(mise activate bash --shims)"
+
+    # # Install BMAD CLI
+    # mise install "nodejs@24" \
+    #   && mise use "nodejs@24" --global
+
+    mkdir -p /home/coder/project
+    cp -R /opt/bmad/bmad-files/. /home/coder/project/
+
     # Add any custom startup commands here
   EOT
+
+  # Default is "non-blocking", although "blocking" is recommended.
+  startup_script_behavior = "non-blocking"
+
+  # TODO: add a link to Sharepoiint with internal documentation
+  troubleshooting_url = "https://coder.com/docs/troubleshooting"
+
+  # The starting directory when a user creates a shell session. Defaults to "$HOME".
+  dir = "/home/coder/project"
+
+  # A mapping of environment variables to set inside the workspace.
+  # env = {
+  #   "EXAMPLE_ENV_VAR" = "example_value"
+  # }
+
+  # The authentication type the agent will use. Must be one of: "token", "google-instance-identity", "aws-instance-identity", "azure-instance-identity".
+  # auth = "token"
+
+  # The list of built-in apps to display in the agent bar.
+  display_apps {
+    vscode                 = true
+    vscode_insiders        = false
+    web_terminal           = true
+    ssh_helper             = false
+    port_forwarding_helper = false
+  }
 
   # The following metadata blocks are optional. They are used to display
   # information about your workspace in the dashboard. You can remove them
@@ -166,12 +221,15 @@ resource "coder_agent" "main" {
     interval = 60
     timeout  = 1
   }
+
+  order = 1
 }
 
 # VS Code Web module
 module "vscode-web" {
   count   = data.coder_workspace.me.start_count
-  source  = "registry.coder.com/modules/coder/vscode-web/coder"
+  source  = "registry.coder.com/coder/vscode-web/coder"
+
   version = "1.4.3"
 
   agent_id                = coder_agent.main.id
@@ -179,7 +237,10 @@ module "vscode-web" {
   auto_install_extensions = true
 
   # Open home by default (or point to a project folder you create)
-  folder = "/home/coder"
+  folder = "/home/coder/project"
+
+  # The prefix to install vscode-web to.
+  install_prefix = "/home/coder/.vscode-web"
 
   # Extensions to install automatically
   extensions = [
@@ -188,10 +249,11 @@ module "vscode-web" {
   ]
 
   # IMPORTANT: put extensions on the PVC so they persist
-  extensions_dir = "/home/coder/.vscode-server/extensions"
+  extensions_dir = "/home/coder/.vscode-web/extensions"
+
 
   # Recommended if your admin has wildcard subdomains enabled
-  subdomain = true
+  subdomain = false
 }
 
 resource "kubernetes_persistent_volume_claim_v1" "home" {
