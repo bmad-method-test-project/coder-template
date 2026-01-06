@@ -10,7 +10,7 @@ env:
   CODER_URL: "http://4.185.233.9/"
   TEMPLATE_NAME: "bmad-vscode"
   # Kubernetes namespace where workspaces will be created
-  NAMESPACE: "coder-workspaces"
+  NAMESPACE: "coder"
   # Set to "true" if Coder is running outside the K8s cluster
   USE_KUBECONFIG: "false"
   BMAD_CLI_VERSION: "latest"
@@ -45,6 +45,9 @@ jobs:
 
       - name: Install Coder CLI
         uses: coder/setup-action@v1
+        with:
+          access_url: ${{ env.CODER_URL }}
+          coder_session_token: ${{ secrets.CODER_TOKEN }}
 
       - name: Create template variables file
         run: |
