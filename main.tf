@@ -122,6 +122,7 @@ resource "coder_agent" "main" {
     # Ensure mise activates in terminals
     touch "$HOME/.bashrc" "$HOME/.bash_profile"
 
+    # Make sure mise is activated in bash shells
     grep -q 'mise activate bash' "$HOME/.bashrc" \
       || echo 'eval "$(mise activate bash)"' >> "$HOME/.bashrc"
     eval "$(mise activate bash)"
@@ -130,10 +131,7 @@ resource "coder_agent" "main" {
       || echo 'eval "$(mise activate bash --shims)"' >> "$HOME/.bash_profile"
     eval "$(mise activate bash --shims)"
 
-    # # Install BMAD CLI
-    # mise install "nodejs@24" \
-    #   && mise use "nodejs@24" --global
-
+    # Create project directory and copy BMAD files
     mkdir -p /home/coder/project
     cp -R /opt/bmad/bmad-files/. /home/coder/project/
 
