@@ -143,7 +143,7 @@ resource "coder_agent" "main" {
         "keyboard.layout": "de",
         # "workbench.colorTheme": "Default Dark Modern"
     }
-    EOF
+EOF
   EOT
 
   # Default is "non-blocking", although "blocking" is recommended.
