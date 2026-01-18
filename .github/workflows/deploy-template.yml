@@ -44,7 +44,7 @@ jobs:
           echo "✅ Template validation successful"
 
       - name: Install Coder CLI
-        uses: coder/setup-action@v1
+        uses: coder/setup-action@v1.1.0
         with:
           access_url: ${{ env.CODER_URL }}
           coder_session_token: ${{ secrets.CODER_TOKEN }}
@@ -66,7 +66,7 @@ jobs:
           coder template push ${{ env.TEMPLATE_NAME }} \
             --directory . \
             --name "${{ steps.version.outputs.VERSION }}" \
-            # --var-file template.tfvars \
+            --var-file template.tfvars \
             --message "Automated deployment via GitHub Actions - v${{ steps.version.outputs.VERSION }}" \
             --yes
 
