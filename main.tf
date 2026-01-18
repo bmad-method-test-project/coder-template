@@ -136,7 +136,14 @@ resource "coder_agent" "main" {
     mkdir -p /home/coder/project
     cp -R /opt/bmad/bmad-files/. /home/coder/project/
 
-    # Add any custom startup commands here
+    # Write the settings
+    cat <<EOF > "$HOME/.vscode-server/data/Machine/settings.json"
+    {
+        "keyboard.dispatch": "keyCode",
+        "keyboard.layout": "de",
+        # "workbench.colorTheme": "Default Dark Modern"
+    }
+    EOF
   EOT
 
   # Default is "non-blocking", although "blocking" is recommended.
