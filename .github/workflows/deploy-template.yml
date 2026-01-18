@@ -4,16 +4,18 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "*"
   workflow_dispatch:
 
 env:
-  CODER_URL: "http://4.185.233.9/"
-  TEMPLATE_NAME: "bmad-vscode"
+  CODER_URL: ${{ vars.CODER_URL }}
+  TEMPLATE_NAME: ${{ vars.TEMPLATE_NAME }}
   # Kubernetes namespace where workspaces will be created
-  NAMESPACE: "coder"
+  NAMESPACE: ${{ vars.NAMESPACE }}
   # Set to "true" if Coder is running outside the K8s cluster
-  USE_KUBECONFIG: "false"
-  BMAD_CLI_VERSION: "latest"
+  USE_KUBECONFIG: ${{ vars.USE_KUBECONFIG }}
+  BMAD_CLI_VERSION: ${{ vars.BMAD_CLI_VERSION }}
 
 jobs:
   validate-and-deploy:
@@ -34,7 +36,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "~> 1.0"
+          terraform_version: ">= 1.2"
 
       - name: Validate template Terraform syntax
         run: |
@@ -44,30 +46,38 @@ jobs:
           echo "✅ Template validation successful"
 
       - name: Install Coder CLI
-        uses: coder/setup-action@v1
+        uses: coder/setup-action@v1.1.0
         with:
           access_url: ${{ env.CODER_URL }}
           coder_session_token: ${{ secrets.CODER_TOKEN }}
 
-      - name: Create template variables file
-        run: |
-          cat > template.tfvars <<EOF
-          use_kubeconfig   = ${{ env.USE_KUBECONFIG }}
-          namespace        = "${{ env.NAMESPACE }}"
-          bmad_cli_version = "${{ env.BMAD_CLI_VERSION }}"
-          EOF
-          echo "📝 Created template.tfvars with deployment variables"
+      # - name: Create template variables file
+      #   run: |
+      #     cat > template.tfvars <<EOF
+      #     use_kubeconfig   = ${{ env.USE_KUBECONFIG }}
+      #     namespace        = "${{ env.NAMESPACE }}"
+      #     bmad_cli_version = "${{ env.BMAD_CLI_VERSION }}"
+      #     EOF
+      #     echo "📝 Created template.tfvars with deployment variables"
 
       - name: Push template to Coder
         env:
           CODER_URL: ${{ env.CODER_URL }}
           CODER_SESSION_TOKEN: ${{ secrets.CODER_TOKEN }}
         run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            TEMPLATE_VERSION="${GITHUB_REF_NAME}"
+          else
+            TEMPLATE_VERSION="${{ steps.version.outputs.VERSION }}"
+          fi
+
           coder template push ${{ env.TEMPLATE_NAME }} \
             --directory . \
-            --name "${{ steps.version.outputs.VERSION }}" \
-            # --var-file template.tfvars \
-            --message "Automated deployment via GitHub Actions - v${{ steps.version.outputs.VERSION }}" \
+            --name "${TEMPLATE_VERSION}" \
+            --variable "use_kubeconfig=${{ env.USE_KUBECONFIG || 'false' }}" \
+            --variable "namespace=${{ env.NAMESPACE }}" \
+            --variable "bmad_cli_version=${{ env.BMAD_CLI_VERSION }}" \
+            --message "Automated deployment via GitHub Actions - v${TEMPLATE_VERSION}" \
             --yes
 
       - name: Set template as active

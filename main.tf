@@ -112,8 +112,8 @@ data "coder_provisioner" "me" {}
 
 resource "coder_agent" "main" {
   # -- REQUIERED --
-  os             = data.coder_provisioner.me.os
-  arch           = data.coder_provisioner.me.arch
+  os   = data.coder_provisioner.me.os
+  arch = data.coder_provisioner.me.arch
 
   # --- OPTIONAL --
   # Initialization script that runs when the agent starts.
@@ -143,7 +143,7 @@ resource "coder_agent" "main" {
         "keyboard.layout": "de",
         # "workbench.colorTheme": "Default Dark Modern"
     }
-    EOF
+EOF
   EOT
 
   # Default is "non-blocking", although "blocking" is recommended.
@@ -233,8 +233,8 @@ resource "coder_agent" "main" {
 
 # VS Code Web module
 module "vscode-web" {
-  count   = data.coder_workspace.me.start_count
-  source  = "registry.coder.com/coder/vscode-web/coder"
+  count  = data.coder_workspace.me.start_count
+  source = "registry.coder.com/coder/vscode-web/coder"
 
   version = "1.4.3"
 
