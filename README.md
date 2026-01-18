@@ -8,15 +8,48 @@ tags: [kubernetes, container]
 
 # Remote Development on Kubernetes Pods
 
-Provision Kubernetes Pods as [Coder workspaces](https://coder.com/docs/workspaces) with this example template.
+Create new [Coder workspaces](https://coder.com/docs/workspaces) with this template.
 
-## Contributing
+## Automated Deployment (GitHub Actions)
 
-Currently, the GitHub Action to deploy the template to Coder does not work. Please update the template manually by pushing it to Coder.
+This repository includes an automated deployment workflow at `.github/workflows/deploy-template.yml`.
+
+- Trigger: The deployment runs when a Git tag is created and pushed. Use GitHub Releases to publish a new version (recommended) — the release tag (for example `v0.1.0`) is used as the template `--name` and embedded in the push `--message`.
+- Branch pushes: Merges to `main` run validation (init/fmt/validate) but do not publish a new template version unless a tag is present.
+- Variables: The workflow reads GitHub environment/repository variables `CODER_URL`, `TEMPLATE_NAME`, `NAMESPACE`, `USE_KUBECONFIG`, `BMAD_CLI_VERSION`, and the secret `CODER_TOKEN` for authentication.
+
+### Release Steps (recommended)
+- Create a GitHub Release in your repository with a new tag (e.g., `v0.1.0`).
+- The workflow will validate Terraform and push the template to Coder using the tag as the version.
+- Verify the action logs and the template version in your Coder instance.
+
+### Optional: Tag via CLI
+If you prefer local tags instead of the Releases UI:
+
+```
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+This will trigger the same deployment logic using the tag name.
+
+## Manually pushing
+
+Alternatively, you can push the Template yourself
 
 1. Download the Coder CLI from the official source: https://coder.com/docs/install/cli
 2. Sign in using `coder login https://coder.example.com``
-3. Use `coder templates push` to push the changes from this repo to the Coder installation
+3. Use this command to push the changes from this repo to the Coder installation
+    ```bash
+    coder template push bmad-standard\
+                --directory . \
+                --name "< create a unique version name >" \
+                --variable "use_kubeconfig=false" \
+                --variable "namespace=coder" \
+                --variable "bmad_cli_version=latest" \
+                --message "< describe the updates made >" \
+                --yes
+    ```
 
 ## Details
 
