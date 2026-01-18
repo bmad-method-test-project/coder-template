@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - "*"
   workflow_dispatch:
 
 env:
@@ -63,13 +65,19 @@ jobs:
           CODER_URL: ${{ env.CODER_URL }}
           CODER_SESSION_TOKEN: ${{ secrets.CODER_TOKEN }}
         run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            TEMPLATE_VERSION="${GITHUB_REF_NAME}"
+          else
+            TEMPLATE_VERSION="${{ steps.version.outputs.VERSION }}"
+          fi
+
           coder template push ${{ env.TEMPLATE_NAME }} \
             --directory . \
-            --name "${{ steps.version.outputs.VERSION }}" \
+            --name "${TEMPLATE_VERSION}" \
             --variable "use_kubeconfig=${{ env.USE_KUBECONFIG }}" \
             --variable "namespace=${{ env.NAMESPACE }}" \
             --variable "bmad_cli_version=${{ env.BMAD_CLI_VERSION }}" \
-            --message "Automated deployment via GitHub Actions - v${{ steps.version.outputs.VERSION }}" \
+            --message "Automated deployment via GitHub Actions - v${TEMPLATE_VERSION}" \
             --yes
 
       - name: Set template as active
