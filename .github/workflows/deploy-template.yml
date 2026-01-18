@@ -7,13 +7,13 @@ on:
   workflow_dispatch:
 
 env:
-  CODER_URL: "http://4.185.233.9/"
-  TEMPLATE_NAME: "bmad-vscode"
+  CODER_URL: ${{ vars.CODER_URL }}
+  TEMPLATE_NAME: ${{ vars.TEMPLATE_NAME }}
   # Kubernetes namespace where workspaces will be created
-  NAMESPACE: "coder"
+  NAMESPACE: ${{ vars.NAMESPACE }}
   # Set to "true" if Coder is running outside the K8s cluster
-  USE_KUBECONFIG: "false"
-  BMAD_CLI_VERSION: "latest"
+  USE_KUBECONFIG: ${{ vars.USE_KUBECONFIG }}
+  BMAD_CLI_VERSION: ${{ vars.BMAD_CLI_VERSION }}
 
 jobs:
   validate-and-deploy:
