@@ -2,8 +2,8 @@ name: Deploy Coder Template
 
 on:
   push:
-    branches:
-      - main
+    # branches:
+    #   - main
     tags:
       - "*"
   workflow_dispatch:
@@ -14,8 +14,8 @@ env:
   # Kubernetes namespace where workspaces will be created
   NAMESPACE: ${{ vars.NAMESPACE }}
   # Set to "true" if Coder is running outside the K8s cluster
-  USE_KUBECONFIG: ${{ vars.USE_KUBECONFIG }}
-  BMAD_CLI_VERSION: ${{ vars.BMAD_CLI_VERSION }}
+  USE_KUBECONFIG: ${{ vars.USE_KUBECONFIG || 'false' }}
+  BMAD_CLI_VERSION: ${{ vars.BMAD_CLI_VERSION || 'latest' }}
 
 jobs:
   validate-and-deploy:
@@ -74,7 +74,7 @@ jobs:
           coder template push ${{ env.TEMPLATE_NAME }} \
             --directory . \
             --name "${TEMPLATE_VERSION}" \
-            --variable "use_kubeconfig=${{ env.USE_KUBECONFIG || 'false' }}" \
+            --variable "use_kubeconfig=${{ env.USE_KUBECONFIG }}" \
             --variable "namespace=${{ env.NAMESPACE }}" \
             --variable "bmad_cli_version=${{ env.BMAD_CLI_VERSION }}" \
             --message "Automated deployment via GitHub Actions - v${TEMPLATE_VERSION}" \
@@ -87,5 +87,5 @@ jobs:
         run: |
           echo "✅ Template deployed successfully!"
           echo "📦 Template: ${{ env.TEMPLATE_NAME }}"
-          echo "🏷️  Version: ${{ steps.version.outputs.VERSION }}"
+          echo "🏷️  Version: ${TEMPLATE_VERSION}"
           echo "🔗 View template: ${{ env.CODER_URL }}templates/${{ env.TEMPLATE_NAME }}"
