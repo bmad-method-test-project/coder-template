@@ -136,9 +136,9 @@ resource "coder_agent" "main" {
     mkdir -p /home/coder/project
     cp -R /opt/bmad/bmad-files/. /home/coder/project/
 
-    mise use --global java latest
-    mise use --global nodejs latest
-    mise use --global python latest
+    mise use --global java
+    mise use --global nodejs
+    mise use --global python
 
     # Write the settings
     cat <<EOF > "$HOME/.vscode-server/data/Machine/settings.json"
