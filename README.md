@@ -18,10 +18,31 @@ This repository includes an automated deployment workflow at `.github/workflows/
 - Branch pushes: Merges to `main` run validation (init/fmt/validate) but do not publish a new template version unless a tag is present.
 - Variables: The workflow reads GitHub environment/repository variables `CODER_URL`, `TEMPLATE_NAME`, `NAMESPACE`, `USE_KUBECONFIG`, `BMAD_CLI_VERSION`, and the secret `CODER_TOKEN` for authentication.
 
+### PR title conventions (required)
+
+Pull requests are required to use **Conventional Commits** style in the **PR title** (not necessarily in every individual commit).
+
+Examples:
+- `feat: ...` (minor)
+- `fix: ...` (patch)
+- `feat!: ...` or `refactor(scope)!: ...` (major)
+
+See `.github/workflows/pr-title-conventional.yml` and `.github/pull_request_template.md`.
+
+### Automated releases
+
+Merges to `main` run `semantic-release`, which:
+- Determines the next semantic version from merge commit messages (recommended: squash-merge using PR title)
+- Updates `VERSION`
+- Creates a Git tag like `vX.Y.Z` and a GitHub Release
+
+The tag creation then triggers `.github/workflows/deploy-template.yml` to push the new version to Coder.
+
 ### Release Steps (recommended)
-- Create a GitHub Release in your repository with a new tag (e.g., `v0.1.0`).
-- The workflow will validate Terraform and push the template to Coder using the tag as the version.
-- Verify the action logs and the template version in your Coder instance.
+- Open a PR with a Conventional Commit style title (see the PR template).
+- Merge the PR into `main`.
+- The release workflow will create a GitHub Release + `vX.Y.Z` tag and update `VERSION`.
+- The deploy workflow will run automatically on the new tag and push the version to Coder.
 
 ### Optional: Tag via CLI
 If you prefer local tags instead of the Releases UI:
