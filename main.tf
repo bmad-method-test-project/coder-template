@@ -114,7 +114,7 @@ locals {
   # Versioned defaults for new workspaces. These are applied on startup but do not
   # override user settings in settings.json.
   vscode_default_settings_json = file("${path.module}/vscode/default-settings.json")
-  vscode_default_locale_json           = file("${path.module}/vscode/locale.json")
+  vscode_default_locale_json   = file("${path.module}/vscode/locale.json")
 }
 
 resource "coder_agent" "main" {

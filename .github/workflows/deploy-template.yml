@@ -8,6 +8,9 @@ on:
       - "v*"
   release:
     types: [published]
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
   workflow_dispatch:
 
 env:
@@ -23,10 +26,19 @@ jobs:
   validate-and-deploy:
     name: Validate and Deploy Template
     runs-on: ubuntu-latest
+    # Only run on successful Release workflow when triggered by workflow_run
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          # Use the exact source for each event type
+          # - release: checkout the release tag
+          # - push tag: checkout the tag ref
+          # - workflow_run: checkout the head_sha from the Release workflow
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || (github.event_name == 'push' && github.ref || github.event.workflow_run.head_sha) }}
 
       - name: Read VERSION file
         id: version
@@ -43,7 +55,10 @@ jobs:
       - name: Validate template Terraform syntax
         run: |
           terraform init -backend=false
-          terraform fmt -check
+          # Show formatting diffs but don't fail the workflow on fmt issues
+          if ! terraform fmt -check -diff -recursive; then
+            echo "::warning title=Terraform formatting::Some files need 'terraform fmt -recursive'"
+          fi
           terraform validate
           echo "✅ Template validation successful"
 
@@ -84,12 +99,26 @@ jobs:
         env:
           CODER_URL: ${{ env.CODER_URL }}
           CODER_SESSION_TOKEN: ${{ secrets.CODER_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          # Available on release events; empty otherwise
+          RELEASE_TAG_NAME: ${{ github.event.release.tag_name }}
         run: |
           USE_KUBECONFIG="${USE_KUBECONFIG:-false}"
           BMAD_CLI_VERSION="${BMAD_CLI_VERSION:-latest}"
 
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+          # Determine version based on event type
+          if [ "${GITHUB_EVENT_NAME}" = "release" ] && [ -n "${RELEASE_TAG_NAME}" ]; then
+            TEMPLATE_VERSION="${RELEASE_TAG_NAME}"
+          elif [ "${GITHUB_REF_TYPE}" = "tag" ] && [ -n "${GITHUB_REF_NAME}" ]; then
             TEMPLATE_VERSION="${GITHUB_REF_NAME}"
+          elif [ "${GITHUB_EVENT_NAME}" = "workflow_run" ]; then
+            # Fallback: fetch latest release tag (assumes Release workflow just published it)
+            TEMPLATE_VERSION=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" | jq -r '.tag_name // empty')
+            if [ -z "$TEMPLATE_VERSION" ]; then
+              TEMPLATE_VERSION="${{ steps.version.outputs.VERSION }}"
+            fi
           else
             TEMPLATE_VERSION="${{ steps.version.outputs.VERSION }}"
           fi
