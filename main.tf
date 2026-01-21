@@ -114,6 +114,7 @@ locals {
   # Versioned defaults for new workspaces. These are applied on startup but do not
   # override user settings in settings.json.
   vscode_default_settings_json = file("${path.module}/vscode/default-settings.json")
+  vscode_default_locale_json           = file("${path.module}/vscode/locale.json")
 }
 
 resource "coder_agent" "main" {
@@ -150,35 +151,17 @@ resource "coder_agent" "main" {
     # into the VS Code Server machine settings file.
     # Existing user settings always win.
     mkdir -p "$HOME/.config/bmad-coder"
-    cat <<'JSON' > "$HOME/.config/bmad-coder/vscode-default-settings.json"
+    cat <<'JSON' > "$HOME/.vscode-server/data/Machine/settings.json"
 ${local.vscode_default_settings_json}
 JSON
 
-    python3 - <<'PY'
-import json
-import os
-from pathlib import Path
-
-defaults_path = Path(os.path.expanduser("~/.config/bmad-coder/vscode-default-settings.json"))
-target = Path(os.path.expanduser("~/.vscode-server/data/Machine/settings.json"))
-
-try:
-  defaults = json.loads(defaults_path.read_text())
-except Exception:
-  defaults = {}
-
-target.parent.mkdir(parents=True, exist_ok=True)
-existing = {}
-if target.exists():
-  try:
-    existing = json.loads(target.read_text())
-  except Exception:
-    existing = {}
-
-merged = dict(defaults)
-merged.update(existing)  # user settings override defaults
-target.write_text(json.dumps(merged, indent=2, sort_keys=True) + "\n")
-PY
+    # Set VS Code display language to German (only if user hasn't set one).
+    mkdir -p "$HOME/.vscode-server/data/Machine"
+    if [ ! -f "$HOME/.vscode-server/data/Machine/locale.json" ]; then
+      cat <<'JSON' > "$HOME/.vscode-server/data/Machine/locale.json"
+${local.vscode_default_locale_json}
+JSON
+    fi
   EOT
 
   # Default is "non-blocking", although "blocking" is recommended.
@@ -286,7 +269,8 @@ module "vscode-web" {
   # Extensions to install automatically
   extensions = [
     "github.copilot",
-    "github.copilot-chat"
+    "github.copilot-chat",
+    "MS-CEINTL.vscode-language-pack-de"
   ]
 
   # IMPORTANT: put extensions on the PVC so they persist
