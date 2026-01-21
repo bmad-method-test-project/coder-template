@@ -110,6 +110,13 @@ data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 data "coder_provisioner" "me" {}
 
+locals {
+  # Versioned defaults for new workspaces. These are applied on startup but do not
+  # override user settings in settings.json.
+  vscode_default_settings_json = file("${path.module}/vscode/default-settings.json")
+  vscode_default_locale_json           = file("${path.module}/vscode/locale.json")
+}
+
 resource "coder_agent" "main" {
   # -- REQUIERED --
   os   = data.coder_provisioner.me.os
@@ -118,7 +125,7 @@ resource "coder_agent" "main" {
   # --- OPTIONAL --
   # Initialization script that runs when the agent starts.
   startup_script = <<EOT
-    set -e
+    set -euo pipefail
 
     # Ensure mise activates in terminals
     touch "$HOME/.bashrc" "$HOME/.bash_profile"
@@ -140,14 +147,21 @@ resource "coder_agent" "main" {
     mise use --global nodejs
     mise use --global python
 
-    # Write the settings
-    cat <<EOF > "$HOME/.vscode-server/data/Machine/settings.json"
-    {
-        "keyboard.dispatch": "keyCode",
-        "keyboard.layout": "de",
-        # "workbench.colorTheme": "Default Dark Modern"
-    }
-EOF
+    # Seed VS Code default settings (versioned in the template) and merge them
+    # into the VS Code Server machine settings file.
+    # Existing user settings always win.
+    mkdir -p "$HOME/.config/bmad-coder"
+    cat <<'JSON' > "$HOME/.vscode-server/data/Machine/settings.json"
+${local.vscode_default_settings_json}
+JSON
+
+    # Set VS Code display language to German (only if user hasn't set one).
+    mkdir -p "$HOME/.vscode-server/data/Machine"
+    if [ ! -f "$HOME/.vscode-server/data/Machine/locale.json" ]; then
+      cat <<'JSON' > "$HOME/.vscode-server/data/Machine/locale.json"
+${local.vscode_default_locale_json}
+JSON
+    fi
   EOT
 
   # Default is "non-blocking", although "blocking" is recommended.
@@ -255,7 +269,8 @@ module "vscode-web" {
   # Extensions to install automatically
   extensions = [
     "github.copilot",
-    "github.copilot-chat"
+    "github.copilot-chat",
+    "MS-CEINTL.vscode-language-pack-de"
   ]
 
   # IMPORTANT: put extensions on the PVC so they persist
