@@ -14,10 +14,12 @@ on:
   workflow_dispatch:
 
 env:
+  # Domain URL of the Coder instance
   CODER_URL: ${{ vars.CODER_URL }}
-  TEMPLATE_NAME: ${{ vars.TEMPLATE_NAME }}
   # Kubernetes namespace where workspaces will be created
-  NAMESPACE: ${{ vars.NAMESPACE }}
+  CODER_NAMESPACE: ${{ vars.CODER_NAMESPACE }}
+  # Name of the Coder template to deploy
+  TEMPLATE_NAME: ${{ vars.TEMPLATE_NAME }}
   # Set to "true" if Coder is running outside the K8s cluster
   USE_KUBECONFIG: ${{ vars.USE_KUBECONFIG }}
   BMAD_CLI_VERSION: ${{ vars.BMAD_CLI_VERSION }}
@@ -90,7 +92,7 @@ jobs:
       #   run: |
       #     cat > template.tfvars <<EOF
       #     use_kubeconfig   = ${{ env.USE_KUBECONFIG }}
-      #     namespace        = "${{ env.NAMESPACE }}"
+      #     namespace        = "${{ env.CODER_NAMESPACE }}"
       #     bmad_cli_version = "${{ env.BMAD_CLI_VERSION }}"
       #     EOF
       #     echo "📝 Created template.tfvars with deployment variables"
@@ -136,7 +138,7 @@ jobs:
             --directory . \
             --name "${TEMPLATE_VERSION}" \
             --variable "use_kubeconfig=${USE_KUBECONFIG}" \
-            --variable "namespace=${{ env.NAMESPACE }}" \
+            --variable "namespace=${{ env.CODER_NAMESPACE }}" \
             --variable "bmad_cli_version=${BMAD_CLI_VERSION}" \
             --message "$MESSAGE" \
             --yes
