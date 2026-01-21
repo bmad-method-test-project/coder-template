@@ -45,6 +45,24 @@ jobs:
           terraform validate
           echo "✅ Template validation successful"
 
+      - name: Extract PR title for release
+        id: pr_info
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          RESPONSE=$(curl -s \
+            -H "Accept: application/vnd.github.groot-preview+json" \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls")
+
+          PR_TITLE=$(echo "$RESPONSE" | jq -r '.[0].title // empty')
+
+          if [ -z "$PR_TITLE" ]; then
+            PR_TITLE=$(git show -s --format=%s "${GITHUB_SHA}")
+          fi
+
+          echo "pr_title=${PR_TITLE}" >> $GITHUB_OUTPUT
+
       - name: Install Coder CLI
         uses: coder/setup-action@v1.1.0
         with:
@@ -76,13 +94,20 @@ jobs:
 
           echo "TEMPLATE_VERSION=$TEMPLATE_VERSION" >> $GITHUB_ENV
 
+          PR_TITLE="${{ steps.pr_info.outputs.pr_title }}"
+          MESSAGE="Automated deployment via GitHub Actions - ${TEMPLATE_VERSION}"
+
+          if [ -n "$PR_TITLE" ]; then
+            MESSAGE="$MESSAGE | PR: $PR_TITLE"
+          fi
+
           coder template push ${{ env.TEMPLATE_NAME }} \
             --directory . \
             --name "${TEMPLATE_VERSION}" \
             --variable "use_kubeconfig=${USE_KUBECONFIG}" \
             --variable "namespace=${{ env.NAMESPACE }}" \
             --variable "bmad_cli_version=${BMAD_CLI_VERSION}" \
-            --message "Automated deployment via GitHub Actions - ${TEMPLATE_VERSION}" \
+            --message "$MESSAGE" \
             --yes
 
       - name: Set template as active
