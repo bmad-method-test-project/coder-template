@@ -76,6 +76,13 @@ Alternatively, you can push the Template yourself
 
 This template uses the `ghcr.io/prosellen/bmad-coder-docker:latest` Docker files to bootstrap the environment.
 
+## VS Code default settings
+
+This template seeds VS Code settings for new workspaces from `vscode/default-settings.json`.
+
+- The defaults are merged into the workspace user settings on startup.
+- If a user later changes their own `settings.json`, their settings take precedence over the defaults.
+
 ## Prerequisites
 
 ### Infrastructure
