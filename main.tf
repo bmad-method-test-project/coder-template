@@ -188,7 +188,7 @@ JSON
     vscode_insiders        = false
     web_terminal           = true
     ssh_helper             = false
-    port_forwarding_helper = false
+    port_forwarding_helper = true
   }
 
   # The following metadata blocks are optional. They are used to display
