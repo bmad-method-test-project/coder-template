@@ -127,22 +127,23 @@ resource "coder_agent" "main" {
   startup_script = <<EOT
     set -euo pipefail
 
-    # Ensure mise activates in terminals
-    touch "$HOME/.bashrc" "$HOME/.bash_profile"
+    # # Ensure mise activates in terminals
+    # touch "$HOME/.bashrc" "$HOME/.bash_profile"
 
-    # Make sure mise is activated in bash shells
-    grep -q 'mise activate bash' "$HOME/.bashrc" \
-      || echo 'eval "$(mise activate bash)"' >> "$HOME/.bashrc"
-    eval "$(mise activate bash)"
+    # # Make sure mise is activated in bash shells
+    # grep -q 'mise activate bash' "$HOME/.bashrc" \
+    #   || echo 'eval "$(mise activate bash)"' >> "$HOME/.bashrc"
+    # eval "$(mise activate bash)"
 
-    grep -q 'mise activate bash --shims' "$HOME/.bash_profile" \
-      || echo 'eval "$(mise activate bash --shims)"' >> "$HOME/.bash_profile"
-    eval "$(mise activate bash --shims)"
+    # grep -q 'mise activate bash --shims' "$HOME/.bash_profile" \
+    #   || echo 'eval "$(mise activate bash --shims)"' >> "$HOME/.bash_profile"
+    # eval "$(mise activate bash --shims)"
 
-    # Create project directory and copy BMAD files
-    mkdir -p /home/coder/project
-    cp -R /opt/bmad/bmad-files/. /home/coder/project/
+    # Create project directory and copy BMAD files from the Docker image to the user's project directory
+    mkdir -p "$HOME/project/"
+    rsync -a --ignore-existing "/usr/local/config/project/" "$HOME/project/"  
 
+    # Install and activate Java, Node.js, and Python using mise
     mise use --global java
     mise use --global nodejs
     mise use --global python
