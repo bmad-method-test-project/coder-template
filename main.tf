@@ -144,6 +144,7 @@ resource "coder_agent" "main" {
     rsync -a --ignore-existing "/usr/local/config/project/" "$HOME/project/"  
 
     # Install and activate Java, Node.js, and Python using mise
+    mise trust --all
     mise use --global java
     mise use --global nodejs
     mise use --global python
