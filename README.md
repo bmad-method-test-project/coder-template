@@ -76,6 +76,22 @@ Alternatively, you can push the Template yourself
 
 This template uses the `ghcr.io/prosellen/bmad-coder-docker:latest` Docker files to bootstrap the environment.
 
+### Security Configuration
+
+The template runs workspaces with specific security settings:
+
+**User ID: 1001**
+- Pod security context: `run_as_user = 1001`, `fs_group = 1001`
+- Container security context: `run_as_user = "1001"`
+- Matches the `coder` user created in the Docker image (UID 1001, GID 1001)
+
+**Why UID 1001?**
+- The base Ubuntu image includes an `ubuntu` user at UID 1000
+- Using UID 1001 avoids conflicts and ensures clean separation
+- The Docker image explicitly creates the `coder` user with this UID
+
+> **Important**: The UID/GID must match between the Dockerfile and this template's security context. If you change one, update the other.
+
 ## VS Code default settings
 
 This template seeds VS Code settings for new workspaces from `vscode/default-settings.json` and the UI language from `vscode/locale.json`.

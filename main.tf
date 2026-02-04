@@ -374,8 +374,8 @@ resource "kubernetes_deployment_v1" "main" {
       }
       spec {
         security_context {
-          run_as_user     = 1000
-          fs_group        = 1000
+          run_as_user     = 1001 # This is the UID of the 'coder' user in the coder workspace images
+          fs_group        = 1001
           run_as_non_root = true
         }
 
@@ -385,7 +385,7 @@ resource "kubernetes_deployment_v1" "main" {
           image_pull_policy = "Always"
           command           = ["sh", "-c", coder_agent.main.init_script]
           security_context {
-            run_as_user = "1000"
+            run_as_user = "1001" # This is the UID of the 'coder' user in the coder workspace images
           }
           env {
             name  = "CODER_AGENT_TOKEN"
