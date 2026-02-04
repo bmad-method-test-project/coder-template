@@ -95,11 +95,90 @@ data "coder_parameter" "home_disk_size" {
   type         = "number"
   icon         = "/emojis/1f4be.png"
   mutable      = false
-  validation {
-    min = 1
-    max = 99999
+  option {
+    name  = "Small (16GB)"
+    value = "16"
+  }
+  option {
+    name  = "Medium (32GB)"
+    value = "32"
+  }
+  option {
+    name  = "Large (64GB)"
+    value = "64"
   }
 }
+
+data "coder_parameter" "bmad_version" {
+  name         = "bmad_version"
+  display_name = "BMAD Version"
+  description  = "The BMAD version to use"
+  default      = "6"
+  type         = "number"
+  icon         = "/emojis/1f4e6.png"
+  mutable      = false
+  option {
+    name  = "v4"
+    value = "4"
+  }
+  option {
+    name  = "v6"
+    value = "6"
+  }
+}
+
+data "coder_parameter" "target_maturity_level" {
+  name         = "target_maturity_level"
+  display_name = "Target Maturity Level"
+  description  = "What is the targeted maturity level for this workspace?"
+  default      = "1"
+  type         = "number"
+  icon         = "/emojis/1f4c8.png"
+  mutable      = false
+  option {
+    name  = "L1 | Concept Demo"
+    value = "1"
+  }
+  option {
+    name  = "L2 | Working Prototype"
+    value = "2"
+  }
+  option {
+    name  = "L3 | Releasable Solution"
+    value = "3"
+  }
+  option {
+    name  = "L4 | Enterprise-Ready"
+    value = "4"
+  }
+}
+
+data "coder_parameter" "user_technical_proficiency" {
+  name         = "user_technical_proficiency"
+  display_name = "User Technical Proficiency"
+  description  = "The user's technical proficiency level"
+  default      = "1"
+  type         = "number"
+  icon         = "/emojis/1f9e0.png"
+  mutable      = false
+  option {
+    name  = "No Technical Software Development Skills"
+    value = "1"
+  }
+  option {
+    name  = "Beginner"
+    value = "2"
+  }
+  option {
+    name  = "Intermediate"
+    value = "3"
+  }
+  option {
+    name  = "Advanced"
+    value = "4"
+  }
+}
+
 
 provider "kubernetes" {
   # Authenticate via ~/.kube/config or a Coder-specific ServiceAccount, depending on admin preferences
