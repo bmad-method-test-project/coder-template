@@ -381,7 +381,7 @@ resource "kubernetes_deployment_v1" "main" {
 
         container {
           name              = "dev"
-          image             = "ghcr.io/prosellen/bmad-coder-docker:latest"
+          image             = "ghcr.io/bmad-method-test-project/bmad-coder-docker:latest"
           image_pull_policy = "Always"
           command           = ["sh", "-c", coder_agent.main.init_script]
           security_context {
