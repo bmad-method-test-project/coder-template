@@ -147,7 +147,7 @@ resource "coder_agent" "main" {
     mise trust --all
     mise use --global java
     mise use --global nodejs
-    mise use --global python
+    mise use --global python@3.13
 
     # Seed VS Code default settings (versioned in the template)
     mkdir -p "$HOME/.vscode-server/data/Machine"
