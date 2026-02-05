@@ -258,6 +258,9 @@ module "vscode-web" {
   count  = data.coder_workspace.me.start_count
   source = "registry.coder.com/coder/vscode-web/coder"
 
+  # # By default, the version is "latest", but you can specify a version or range of versions if desired.
+  # # See https://registry.coder.com/modules/coder/vscode-web#pin-a-specific-vs-code-web-version for details 
+  # # on how to find and validate the latest version from the VS Code Repo
   # version = "1.4.3"
 
   agent_id                = coder_agent.main.id
