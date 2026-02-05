@@ -130,14 +130,14 @@ resource "coder_agent" "main" {
     # # Ensure mise activates in terminals
     # touch "$HOME/.bashrc" "$HOME/.bash_profile"
 
-    # # Make sure mise is activated in bash shells
+    # # Make sure mise is activated in bash shells - but should be inherited by the workspace.
     # grep -q 'mise activate bash' "$HOME/.bashrc" \
     #   || echo 'eval "$(mise activate bash)"' >> "$HOME/.bashrc"
-    # eval "$(mise activate bash)"
+    eval "$(mise activate bash)"
 
     # grep -q 'mise activate bash --shims' "$HOME/.bash_profile" \
     #   || echo 'eval "$(mise activate bash --shims)"' >> "$HOME/.bash_profile"
-    # eval "$(mise activate bash --shims)"
+    eval "$(mise activate bash --shims)"
 
     # Create project directory and copy BMAD files from the Docker image to the user's project directory
     mkdir -p "$HOME/project/"
@@ -164,7 +164,8 @@ JSON
     fi
 
     # Install markdown-tree-parser globally
-    npm install -g @kayvan/markdown-tree-parser
+    # Since node/npm is not part of the bash profile at this time, it needs "mise exec" to run.
+    mise exec -- npm install -g @kayvan/markdown-tree-parser
   EOT
 
   # Default is "non-blocking", although "blocking" is recommended.
@@ -257,7 +258,7 @@ module "vscode-web" {
   count  = data.coder_workspace.me.start_count
   source = "registry.coder.com/coder/vscode-web/coder"
 
-  version = "1.4.3"
+  # version = "1.4.3"
 
   agent_id                = coder_agent.main.id
   accept_license          = true
