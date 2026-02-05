@@ -134,7 +134,7 @@ data "coder_parameter" "target_maturity_level" {
   default      = "1"
   type         = "number"
   icon         = "/emojis/1f4c8.png"
-  mutable      = false
+  mutable      = true
   option {
     name  = "L1 | Concept Demo"
     value = "1"
@@ -160,7 +160,7 @@ data "coder_parameter" "user_technical_proficiency" {
   default      = "1"
   type         = "number"
   icon         = "/emojis/1f9e0.png"
-  mutable      = false
+  mutable      = true
   option {
     name  = "No Technical Software Development Skills"
     value = "1"
