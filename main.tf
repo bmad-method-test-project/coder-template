@@ -150,15 +150,15 @@ resource "coder_agent" "main" {
     mise use --global nodejs
     mise use --global python@3.13
 
-    # Seed VS Code default settings (versioned in the template)
+    # Seed VS Code default User settings (versioned in the template)
     mkdir -p "$HOME/.vscode-server/data/User"
     cat <<'JSON' > "$HOME/.vscode-server/data/User/settings.json"
 ${local.vscode_default_user_settings_json}
 JSON
 
-    # Seed VS Code default settings (versioned in the template)
-    mkdir -p "$HOME/.vscode/"
-    cat <<'JSON' > "$HOME/.vscode/settings.json"
+    # Seed VS Code default Workspacesettings (versioned in the template)
+    mkdir -p "$HOME/project/.vscode/"
+    cat <<'JSON' > "$HOME/project/.vscode/settings.json"
 ${local.vscode_default_workspace_settings_json}
 JSON
 
