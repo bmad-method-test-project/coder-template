@@ -15,10 +15,5 @@ variable "use_kubeconfig" {
 variable "namespace" {
   type        = string
   description = "The Kubernetes namespace to create workspaces in (must exist prior to creating workspaces). If the Coder host is itself running as a Pod on the same Kubernetes cluster as you are deploying workspaces to, set this to the same namespace."
-}
-
-variable "bmad_cli_version" {
-  type        = string
-  description = "The version of BMAD to use."
-  default     = "latest"
+  default     = "coder"
 }
