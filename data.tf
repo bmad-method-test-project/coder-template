@@ -2,7 +2,6 @@ data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 data "coder_provisioner" "me" {}
 
-
 data "coder_parameter" "project_name" {
   name         = "project_name"
   display_name = "Project Name"
@@ -20,6 +19,8 @@ data "coder_parameter" "cpu" {
   name         = "cpu"
   display_name = "CPU"
   description  = "The number of CPU cores"
+  type         = "number"
+  form_type    = "radio"
   default      = "2"
   icon         = "/icon/memory.svg"
   mutable      = true
@@ -50,7 +51,7 @@ data "coder_parameter" "memory" {
   description  = "The amount of memory in GB"
   default      = "2"
   type         = "number"
-  form_type    = "dropdown"
+  form_type    = "radio"
   icon         = "/icon/memory.svg"
   mutable      = true
   option {
@@ -81,6 +82,7 @@ data "coder_parameter" "home_disk_size" {
   description  = "The size of the home disk in GB"
   default      = "16"
   type         = "number"
+  form_type    = "dropdown"
   icon         = "/emojis/1f4be.png"
   mutable      = false
   option {
@@ -128,7 +130,7 @@ data "coder_parameter" "target_maturity_level" {
   default      = "1"
   type         = "number"
   icon         = "/emojis/1f4c8.png"
-  form_type    = "dropdown"
+  form_type    = "radio"
   mutable      = true
   option {
     name  = "L1 | Concept Demo"
@@ -157,7 +159,7 @@ data "coder_parameter" "user_technical_proficiency" {
   default      = "2"
   type         = "number"
   icon         = "/emojis/1f9e0.png"
-  form_type    = "dropdown"
+  form_type    = "radio"
   mutable      = true
   option {
     name  = "Beginner"

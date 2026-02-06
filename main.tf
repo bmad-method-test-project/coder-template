@@ -42,19 +42,19 @@ JSON
     mise use --global nodejs
     mise use --global python@3.13
 
-    # Install jinja2 for configuration rendering
-    mise exec -- pip3 install --break-system-packages jinja2
+    # # Install jinja2 for configuration rendering
+    # mise exec -- pip3 install --break-system-packages jinja2
 
-    # Render configuration files and AGENTS.md
-    mise exec -- python3 /usr/local/config/scripts/render-config.py \
-      --bmad-version "${data.coder_parameter.bmad_version.value}" \
-      --project-root "${local.project_directory}" \
-      --user-name "${data.coder_workspace_owner.me.name}" \
-      --communication-language "${data.coder_parameter.communication_language.value}" \
-      --document-output-language "${data.coder_parameter.document_output_language.value}" \
-      --project-name "${data.coder_parameter.project_name.value != "" ? data.coder_parameter.project_name.value : data.coder_workspace.me.name}" \
-      --user-technical-proficiency "${data.coder_parameter.user_technical_proficiency.value}" \
-      --target-maturity-level "${data.coder_parameter.target_maturity_level.value}"
+    # # Render configuration files and AGENTS.md
+    # mise exec -- python3 /usr/local/config/scripts/render-config.py \
+    #   --bmad-version "${data.coder_parameter.bmad_version.value}" \
+    #   --project-root "${local.project_directory}" \
+    #   --user-name "${data.coder_workspace_owner.me.name}" \
+    #   --communication-language "${data.coder_parameter.communication_language.value}" \
+    #   --document-output-language "${data.coder_parameter.document_output_language.value}" \
+    #   --project-name "${data.coder_parameter.project_name.value != "" ? data.coder_parameter.project_name.value : data.coder_workspace.me.name}" \
+    #   --user-technical-proficiency "${data.coder_parameter.user_technical_proficiency.value}" \
+    #   --target-maturity-level "${data.coder_parameter.target_maturity_level.value}"
 
     # Install markdown-tree-parser globally
     # Since node/npm is not part of the bash profile at this time, it needs "mise exec" to run.
@@ -64,7 +64,7 @@ JSON
   # Default is "non-blocking", although "blocking" is recommended.
   startup_script_behavior = "non-blocking"
 
-  # TODO: add a link to Sharepoiint with internal documentation
+  # TODO: add a link to Sharepoint with internal documentation
   troubleshooting_url = "https://coder.com/docs/troubleshooting"
 
   # The starting directory when a user creates a shell session. Defaults to "$HOME".

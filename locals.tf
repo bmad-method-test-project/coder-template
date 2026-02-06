@@ -1,7 +1,8 @@
 locals {
   # Select Docker image based on BMAD version
-  bmad_docker_image = data.coder_parameter.bmad_version.value == "4" ? "ghcr.io/bmad-method-test-project/bmad-coder-docker-v4:latest" : "ghcr.io/bmad-method-test-project/bmad-coder-docker-v6:latest"
-
+  # bmad_docker_image = data.coder_parameter.bmad_version.value == "4" ? "ghcr.io/bmad-method-test-project/bmad-coder-docker-v4:latest" : "ghcr.io/bmad-method-test-project/bmad-coder-docker-v6:latest"
+  bmad_docker_image = "ghcr.io/bmad-method-test-project/bmad-coder-docker:latest"
+                      
   # Path to the project directory in the workspace, where BMAD files will be copied on startup.
   project_directory = "/home/coder/project"
 
