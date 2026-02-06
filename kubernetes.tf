@@ -113,7 +113,7 @@ resource "kubernetes_deployment_v1" "main" {
             }
           }
           volume_mount {
-            mount_path = "/home/coder"
+            mount_path = local.user_home_directory
             name       = "home"
             read_only  = false
           }

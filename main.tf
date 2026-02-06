@@ -76,7 +76,7 @@ JSON
   troubleshooting_url = "https://coder.com/docs/troubleshooting"
 
   # The starting directory when a user creates a shell session. Defaults to "$HOME".
-  dir = "/home/coder/project"
+  dir = local.project_directory
 
   # A mapping of environment variables to set inside the workspace.
   # env = {
@@ -156,8 +156,10 @@ JSON
 
 # VS Code Web module
 module "vscode-web" {
-  count  = data.coder_workspace.me.start_count
   source = "registry.coder.com/coder/vscode-web/coder"
+
+  # Total number of instances of this block.
+  count  = data.coder_workspace.me.start_count
 
   # # By default, the version is "latest", but you can specify a version or range of versions if desired.
   # # See https://registry.coder.com/modules/coder/vscode-web#pin-a-specific-vs-code-web-version for details 
@@ -169,10 +171,10 @@ module "vscode-web" {
   auto_install_extensions = true
 
   # Open home by default (or point to a project folder you create)
-  folder = "/home/coder/project"
+  folder = local.project_directory
 
   # The prefix to install vscode-web to.
-  install_prefix = "/home/coder/.vscode-web"
+  install_prefix = "${local.user_home_directory}/.vscode-web"
 
   # Extensions to install automatically
   extensions = [
@@ -182,7 +184,7 @@ module "vscode-web" {
   ]
 
   # IMPORTANT: put extensions on the PVC so they persist
-  extensions_dir = "/home/coder/.vscode-web/extensions"
+  extensions_dir = "${local.user_home_directory}/.vscode-web/extensions"
 
   # Default Settings
   settings = {
