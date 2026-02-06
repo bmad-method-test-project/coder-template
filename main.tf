@@ -157,26 +157,68 @@ data "coder_parameter" "user_technical_proficiency" {
   name         = "user_technical_proficiency"
   display_name = "User Technical Proficiency"
   description  = "The user's technical proficiency level"
-  default      = "1"
+  default      = "2"
   type         = "number"
   icon         = "/emojis/1f9e0.png"
   mutable      = true
   option {
-    name  = "No Technical Software Development Skills"
+    name  = "Beginner"
     value = "1"
   }
   option {
-    name  = "Beginner"
+    name  = "Intermediate"
     value = "2"
   }
   option {
-    name  = "Intermediate"
+    name  = "Expert"
     value = "3"
   }
+}
+
+data "coder_parameter" "communication_language" {
+  name         = "communication_language"
+  display_name = "Communication Language"
+  description  = "Language for AI agent communication"
+  default      = "English"
+  type         = "string"
+  icon         = "/emojis/1f5e3.png"
+  mutable      = true
   option {
-    name  = "Advanced"
-    value = "4"
+    name  = "English"
+    value = "English"
   }
+  option {
+    name  = "Deutsch"
+    value = "Deutsch"
+  }
+}
+
+data "coder_parameter" "document_output_language" {
+  name         = "document_output_language"
+  display_name = "Document Output Language"
+  description  = "Language for generated documents"
+  default      = "English"
+  type         = "string"
+  icon         = "/emojis/1f4dd.png"
+  mutable      = true
+  option {
+    name  = "English"
+    value = "English"
+  }
+  option {
+    name  = "Deutsch"
+    value = "Deutsch"
+  }
+}
+
+data "coder_parameter" "project_name" {
+  name         = "project_name"
+  display_name = "Project Name"
+  description  = "Display name for the project (leave empty to use workspace name)"
+  default      = ""
+  type         = "string"
+  icon         = "/emojis/1f4c1.png"
+  mutable      = true
 }
 
 
@@ -194,6 +236,9 @@ locals {
   # override user settings in settings.json.
   vscode_default_settings_json = file("${path.module}/vscode/default-settings.json")
   vscode_default_locale_json   = file("${path.module}/vscode/locale.json")
+  
+  # Select Docker image based on BMAD version
+  bmad_docker_image = data.coder_parameter.bmad_version.value == "4" ? "ghcr.io/bmad-method-test-project/bmad-coder-docker-v4:latest" : "ghcr.io/bmad-method-test-project/bmad-coder-docker-v6:latest"
 }
 
 resource "coder_agent" "main" {
@@ -206,18 +251,6 @@ resource "coder_agent" "main" {
   startup_script = <<EOT
     set -euo pipefail
 
-    # # Ensure mise activates in terminals
-    # touch "$HOME/.bashrc" "$HOME/.bash_profile"
-
-    # # Make sure mise is activated in bash shells
-    # grep -q 'mise activate bash' "$HOME/.bashrc" \
-    #   || echo 'eval "$(mise activate bash)"' >> "$HOME/.bashrc"
-    # eval "$(mise activate bash)"
-
-    # grep -q 'mise activate bash --shims' "$HOME/.bash_profile" \
-    #   || echo 'eval "$(mise activate bash --shims)"' >> "$HOME/.bash_profile"
-    # eval "$(mise activate bash --shims)"
-
     # Create project directory and copy BMAD files from the Docker image to the user's project directory
     mkdir -p "$HOME/project/"
     rsync -a --ignore-existing "/usr/local/config/project/" "$HOME/project/"  
@@ -226,6 +259,20 @@ resource "coder_agent" "main" {
     mise use --global java
     mise use --global nodejs
     mise use --global python
+
+    # Install jinja2 for configuration rendering
+    pip3 install --break-system-packages jinja2
+
+    # Render configuration files and AGENTS.md
+    python3 /usr/local/config/scripts/render-config.py \
+      --bmad-version "${data.coder_parameter.bmad_version.value}" \
+      --project-root "$HOME/project" \
+      --user-name "${data.coder_workspace_owner.me.name}" \
+      --communication-language "${data.coder_parameter.communication_language.value}" \
+      --document-output-language "${data.coder_parameter.document_output_language.value}" \
+      --project-name "${data.coder_parameter.project_name.value != "" ? data.coder_parameter.project_name.value : data.coder_workspace.me.name}" \
+      --user-technical-proficiency "${data.coder_parameter.user_technical_proficiency.value}" \
+      --target-maturity-level "${data.coder_parameter.target_maturity_level.value}"
 
     # Seed VS Code default settings (versioned in the template)
     mkdir -p "$HOME/.vscode-server/data/Machine"
@@ -460,7 +507,7 @@ resource "kubernetes_deployment_v1" "main" {
 
         container {
           name              = "dev"
-          image             = "ghcr.io/bmad-method-test-project/bmad-coder-docker:latest"
+          image             = local.bmad_docker_image
           image_pull_policy = "Always"
           command           = ["sh", "-c", coder_agent.main.init_script]
           security_context {
