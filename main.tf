@@ -151,7 +151,7 @@ module "vscode-web" {
   source = "registry.coder.com/coder/vscode-web/coder"
 
   # Total number of instances of this block.
-  count  = data.coder_workspace.me.start_count
+  count = data.coder_workspace.me.start_count
 
   # # By default, the version is "latest", but you can specify a version or range of versions if desired.
   # # See https://registry.coder.com/modules/coder/vscode-web#pin-a-specific-vs-code-web-version for details 

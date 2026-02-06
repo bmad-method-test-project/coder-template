@@ -193,6 +193,18 @@ resource "coder_app" "code_server" {
 - **Terraform Registry**: https://registry.terraform.io/
 - **Kubernetes Docs**: https://kubernetes.io/docs/
 
+## Git Commit Guidelines
+- Use conventional commit messages (e.g., feat:, fix:, docs:, style:, refactor:, test:, chore:). (https://www.conventionalcommits.org/en/v1.0.0/)
+- First line is 50 characters or less.
+  - Separate subject from body with a blank line.
+  - Use the body to explain what and why vs. how.
+- Include issue references in commit messages when applicable.
+
+## Documentation Guidelines
+- Keep README.md up to date with major changes.
+- Write brief, clear descriptions for developers and architects with limited Terraform/Terragrunt knowledge.
+- Maintain a dependency/tooling list near the top of README.md, including links to official docs and installation guides.
+
 ## Code Style
 
 - Use 2 spaces for indentation in HCL files
