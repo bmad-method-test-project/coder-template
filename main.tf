@@ -150,17 +150,17 @@ resource "coder_agent" "main" {
     mise use --global nodejs
     mise use --global python@3.13
 
-    # Seed VS Code default User settings (versioned in the template)
-    mkdir -p "$HOME/.vscode-server/data/User"
-    cat <<'JSON' > "$HOME/.vscode-server/data/User/settings.json"
-${local.vscode_default_user_settings_json}
-JSON
+#     # Seed VS Code default User settings (versioned in the template)
+#     mkdir -p "$HOME/.vscode-server/data/User"
+#     cat <<'JSON' > "$HOME/.vscode-server/data/User/settings.json"
+# ${local.vscode_default_user_settings_json}
+# JSON
 
-    # Seed VS Code default Workspacesettings (versioned in the template)
-    mkdir -p "$HOME/project/.vscode/"
-    cat <<'JSON' > "$HOME/project/.vscode/settings.json"
-${local.vscode_default_workspace_settings_json}
-JSON
+#     # Seed VS Code default Workspacesettings (versioned in the template)
+#     mkdir -p "$HOME/project/.vscode/"
+#     cat <<'JSON' > "$HOME/project/.vscode/settings.json"
+# ${local.vscode_default_workspace_settings_json}
+# JSON
 
     # Set VS Code display language to German (only if user hasn't set one).
     mkdir -p "$HOME/.vscode-server/data/User"
@@ -289,6 +289,22 @@ module "vscode-web" {
 
   # IMPORTANT: put extensions on the PVC so they persist
   extensions_dir = "/home/coder/.vscode-web/extensions"
+
+  # Default Settings
+  settings = {
+    "telemetry.enableTelemetry" = false
+    "telemetry.enableCrashReporter" = false
+    "editor.fontSize" = 14
+    "editor.tabSize" = 2
+    "editor.formatOnSave" = true
+    "files.autoSave" = "afterDelay"
+    "files.autoSaveDelay" = 1000
+    "extensions.autoUpdate" = true
+    "extensions.autoCheckUpdates" = true
+    "security.workspace.trust.enabled" = false
+    "security.workspace.trust.startupPrompt" = "never"
+    "coder.disableTelemetry" = true
+  }
 
   # Who can access this workspace's VS Code Web instance - options are:
   # "public" (anyone with the link), "authenticated" (any logged-in user), or

@@ -1,4 +1,5 @@
 name: Deploy Coder Template
+run-name: "Deploy Coder Template - Version: ${{ github.ref_name }}"
 
 on:
   release:
@@ -18,7 +19,7 @@ env:
 
 jobs:
   validate-and-deploy:
-    name: Validate and Deploy Template
+    name: Validate and Deploy Template to 
     runs-on: ubuntu-latest
     
     steps:
