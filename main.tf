@@ -234,10 +234,10 @@ data "coder_provisioner" "me" {}
 locals {
   # Versioned defaults for new workspaces. These are applied on startup but do not
   # override user settings in settings.json.
-  vscode_default_user_settings_json = file("${path.module}/vscode/user-settings.json")
+  vscode_default_user_settings_json      = file("${path.module}/vscode/user-settings.json")
   vscode_default_workspace_settings_json = file("${path.module}/vscode/workspace-settings.json")
-  vscode_default_locale_json   = file("${path.module}/vscode/locale.json")
-  
+  vscode_default_locale_json             = file("${path.module}/vscode/locale.json")
+
   # Select Docker image based on BMAD version
   bmad_docker_image = data.coder_parameter.bmad_version.value == "4" ? "ghcr.io/bmad-method-test-project/bmad-coder-docker-v4:latest" : "ghcr.io/bmad-method-test-project/bmad-coder-docker-v6:latest"
 }
@@ -291,17 +291,13 @@ resource "coder_agent" "main" {
     # Seed VS Code default settings (versioned in the template)
     mkdir -p "$HOME/.vscode-server/data/Machine"
     cat <<'JSON' > "$HOME/.vscode-server/data/Machine/settings.json"
-${local.vscode_default_settings_json}
+${local.vscode_default_workspace_settings_json}
+JSON
+
     # Seed VS Code default User settings (versioned in the template)
     mkdir -p "$HOME/.vscode-server/data/User"
     cat <<'JSON' > "$HOME/.vscode-server/data/User/settings.json"
 ${local.vscode_default_user_settings_json}
-JSON
-
-    # Seed VS Code default Workspacesettings (versioned in the template)
-    mkdir -p "$HOME/project/.vscode/"
-    cat <<'JSON' > "$HOME/project/.vscode/settings.json"
-${local.vscode_default_workspace_settings_json}
 JSON
 
     # Set VS Code display language to German (only if user hasn't set one).
@@ -434,18 +430,18 @@ module "vscode-web" {
 
   # Default Settings
   settings = {
-    "telemetry.enableTelemetry" = false
-    "telemetry.enableCrashReporter" = false
-    "editor.fontSize" = 14
-    "editor.tabSize" = 2
-    "editor.formatOnSave" = true
-    "files.autoSave" = "afterDelay"
-    "files.autoSaveDelay" = 1000
-    "extensions.autoUpdate" = true
-    "extensions.autoCheckUpdates" = true
-    "security.workspace.trust.enabled" = false
+    "telemetry.enableTelemetry"              = false
+    "telemetry.enableCrashReporter"          = false
+    "editor.fontSize"                        = 14
+    "editor.tabSize"                         = 2
+    "editor.formatOnSave"                    = true
+    "files.autoSave"                         = "afterDelay"
+    "files.autoSaveDelay"                    = 1000
+    "extensions.autoUpdate"                  = true
+    "extensions.autoCheckUpdates"            = true
+    "security.workspace.trust.enabled"       = false
     "security.workspace.trust.startupPrompt" = "never"
-    "coder.disableTelemetry" = true
+    "coder.disableTelemetry"                 = true
   }
 
   # Who can access this workspace's VS Code Web instance - options are:
