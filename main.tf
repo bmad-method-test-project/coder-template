@@ -234,7 +234,8 @@ data "coder_provisioner" "me" {}
 locals {
   # Versioned defaults for new workspaces. These are applied on startup but do not
   # override user settings in settings.json.
-  vscode_default_settings_json = file("${path.module}/vscode/default-settings.json")
+  vscode_default_user_settings_json = file("${path.module}/vscode/user-settings.json")
+  vscode_default_workspace_settings_json = file("${path.module}/vscode/workspace-settings.json")
   vscode_default_locale_json   = file("${path.module}/vscode/locale.json")
   
   # Select Docker image based on BMAD version
@@ -251,20 +252,33 @@ resource "coder_agent" "main" {
   startup_script = <<EOT
     set -euo pipefail
 
+    # # Ensure mise activates in terminals
+    # touch "$HOME/.bashrc" "$HOME/.bash_profile"
+
+    # # Make sure mise is activated in bash shells - but should be inherited by the workspace.
+    # grep -q 'mise activate bash' "$HOME/.bashrc" \
+    #   || echo 'eval "$(mise activate bash)"' >> "$HOME/.bashrc"
+    eval "$(mise activate bash)"
+
+    # grep -q 'mise activate bash --shims' "$HOME/.bash_profile" \
+    #   || echo 'eval "$(mise activate bash --shims)"' >> "$HOME/.bash_profile"
+    eval "$(mise activate bash --shims)"
+
     # Create project directory and copy BMAD files from the Docker image to the user's project directory
     mkdir -p "$HOME/project/"
     rsync -a --ignore-existing "/usr/local/config/project/" "$HOME/project/"  
 
     # Install and activate Java, Node.js, and Python using mise
+    mise trust --all
     mise use --global java
     mise use --global nodejs
-    mise use --global python
+    mise use --global python@3.13
 
     # Install jinja2 for configuration rendering
-    pip3 install --break-system-packages jinja2
+    mise exec -- pip3 install --break-system-packages jinja2
 
     # Render configuration files and AGENTS.md
-    python3 /usr/local/config/scripts/render-config.py \
+    mise exec -- python3 /usr/local/config/scripts/render-config.py \
       --bmad-version "${data.coder_parameter.bmad_version.value}" \
       --project-root "$HOME/project" \
       --user-name "${data.coder_workspace_owner.me.name}" \
@@ -278,18 +292,29 @@ resource "coder_agent" "main" {
     mkdir -p "$HOME/.vscode-server/data/Machine"
     cat <<'JSON' > "$HOME/.vscode-server/data/Machine/settings.json"
 ${local.vscode_default_settings_json}
+    # Seed VS Code default User settings (versioned in the template)
+    mkdir -p "$HOME/.vscode-server/data/User"
+    cat <<'JSON' > "$HOME/.vscode-server/data/User/settings.json"
+${local.vscode_default_user_settings_json}
+JSON
+
+    # Seed VS Code default Workspacesettings (versioned in the template)
+    mkdir -p "$HOME/project/.vscode/"
+    cat <<'JSON' > "$HOME/project/.vscode/settings.json"
+${local.vscode_default_workspace_settings_json}
 JSON
 
     # Set VS Code display language to German (only if user hasn't set one).
-    mkdir -p "$HOME/.vscode-server/data/Machine"
-    if [ ! -f "$HOME/.vscode-server/data/Machine/locale.json" ]; then
-      cat <<'JSON' > "$HOME/.vscode-server/data/Machine/locale.json"
+    mkdir -p "$HOME/.vscode-server/data/User"
+    if [ ! -f "$HOME/.vscode-server/data/User/locale.json" ]; then
+      cat <<'JSON' > "$HOME/.vscode-server/data/User/locale.json"
 ${local.vscode_default_locale_json}
 JSON
     fi
 
     # Install markdown-tree-parser globally
-    npm install -g @kayvan/markdown-tree-parser
+    # Since node/npm is not part of the bash profile at this time, it needs "mise exec" to run.
+    mise exec -- npm install -g @kayvan/markdown-tree-parser
   EOT
 
   # Default is "non-blocking", although "blocking" is recommended.
@@ -382,7 +407,10 @@ module "vscode-web" {
   count  = data.coder_workspace.me.start_count
   source = "registry.coder.com/coder/vscode-web/coder"
 
-  version = "1.4.3"
+  # # By default, the version is "latest", but you can specify a version or range of versions if desired.
+  # # See https://registry.coder.com/modules/coder/vscode-web#pin-a-specific-vs-code-web-version for details 
+  # # on how to find and validate the latest version from the VS Code Repo
+  # version = "1.4.3"
 
   agent_id                = coder_agent.main.id
   accept_license          = true
@@ -403,6 +431,22 @@ module "vscode-web" {
 
   # IMPORTANT: put extensions on the PVC so they persist
   extensions_dir = "/home/coder/.vscode-web/extensions"
+
+  # Default Settings
+  settings = {
+    "telemetry.enableTelemetry" = false
+    "telemetry.enableCrashReporter" = false
+    "editor.fontSize" = 14
+    "editor.tabSize" = 2
+    "editor.formatOnSave" = true
+    "files.autoSave" = "afterDelay"
+    "files.autoSaveDelay" = 1000
+    "extensions.autoUpdate" = true
+    "extensions.autoCheckUpdates" = true
+    "security.workspace.trust.enabled" = false
+    "security.workspace.trust.startupPrompt" = "never"
+    "coder.disableTelemetry" = true
+  }
 
   # Who can access this workspace's VS Code Web instance - options are:
   # "public" (anyone with the link), "authenticated" (any logged-in user), or
