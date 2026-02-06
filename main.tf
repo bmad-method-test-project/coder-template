@@ -8,41 +8,9 @@ resource "coder_agent" "main" {
   startup_script = <<EOT
     set -euo pipefail
 
-    # # Ensure mise activates in terminals
-    # touch "$HOME/.bashrc" "$HOME/.bash_profile"
-
-    # # Make sure mise is activated in bash shells - but should be inherited by the workspace.
-    # grep -q 'mise activate bash' "$HOME/.bashrc" \
-    #   || echo 'eval "$(mise activate bash)"' >> "$HOME/.bashrc"
-    eval "$(mise activate bash)"
-
-    # grep -q 'mise activate bash --shims' "$HOME/.bash_profile" \
-    #   || echo 'eval "$(mise activate bash --shims)"' >> "$HOME/.bash_profile"
-    eval "$(mise activate bash --shims)"
-
     # Create project directory and copy BMAD files from the Docker image to the user's project directory
-    mkdir -p "$HOME/project/"
-    rsync -a --ignore-existing "/usr/local/config/project/" "$HOME/project/"  
-
-    # Install and activate Java, Node.js, and Python using mise
-    mise trust --all
-    mise use --global java
-    mise use --global nodejs
-    mise use --global python@3.13
-
-    # Install jinja2 for configuration rendering
-    mise exec -- pip3 install --break-system-packages jinja2
-
-    # Render configuration files and AGENTS.md
-    mise exec -- python3 /usr/local/config/scripts/render-config.py \
-      --bmad-version "${data.coder_parameter.bmad_version.value}" \
-      --project-root "$HOME/project" \
-      --user-name "${data.coder_workspace_owner.me.name}" \
-      --communication-language "${data.coder_parameter.communication_language.value}" \
-      --document-output-language "${data.coder_parameter.document_output_language.value}" \
-      --project-name "${data.coder_parameter.project_name.value != "" ? data.coder_parameter.project_name.value : data.coder_workspace.me.name}" \
-      --user-technical-proficiency "${data.coder_parameter.user_technical_proficiency.value}" \
-      --target-maturity-level "${data.coder_parameter.target_maturity_level.value}"
+    mkdir -p "${local.project_directory}"
+    rsync -a --ignore-existing "/usr/local/config/project/" "${local.project_directory}"  
 
     # Seed VS Code default settings (versioned in the template)
     mkdir -p "$HOME/.vscode-server/data/Machine"
@@ -63,6 +31,30 @@ JSON
 ${local.vscode_default_locale_json}
 JSON
     fi
+
+    # Activate mise, which is included in the Docker image.
+    eval "$(mise activate bash)"
+    eval "$(mise activate bash --shims)"
+
+    # Install and activate Java, Node.js, and Python using mise
+    mise trust --all
+    mise use --global java
+    mise use --global nodejs
+    mise use --global python@3.13
+
+    # Install jinja2 for configuration rendering
+    mise exec -- pip3 install --break-system-packages jinja2
+
+    # Render configuration files and AGENTS.md
+    mise exec -- python3 /usr/local/config/scripts/render-config.py \
+      --bmad-version "${data.coder_parameter.bmad_version.value}" \
+      --project-root "${local.project_directory}" \
+      --user-name "${data.coder_workspace_owner.me.name}" \
+      --communication-language "${data.coder_parameter.communication_language.value}" \
+      --document-output-language "${data.coder_parameter.document_output_language.value}" \
+      --project-name "${data.coder_parameter.project_name.value != "" ? data.coder_parameter.project_name.value : data.coder_workspace.me.name}" \
+      --user-technical-proficiency "${data.coder_parameter.user_technical_proficiency.value}" \
+      --target-maturity-level "${data.coder_parameter.target_maturity_level.value}"
 
     # Install markdown-tree-parser globally
     # Since node/npm is not part of the bash profile at this time, it needs "mise exec" to run.
