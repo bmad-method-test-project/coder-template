@@ -74,7 +74,25 @@ Alternatively, you can push the Template yourself
 
 ## Details
 
-This template uses the `ghcr.io/prosellen/bmad-coder-docker:latest` Docker files to bootstrap the environment.
+This template uses the `ghcr.io/bmad-method-test-project/bmad-coder-docker:latest` Docker files to bootstrap the environment.
+
+## Terraform / Terragrunt layout
+
+Short description: this template is pure Terraform (no Terragrunt in this repo). The files are organized like this:
+
+```
+coder-template/
+    main.tf                # entrypoint wiring data, locals, and resources
+    variables.tf           # input variables for the template
+    locals.tf              # derived values used across resources
+    providers.tf           # Terraform and provider configuration
+    data.tf                # Coder/Kubernetes data sources and parameters
+    kubernetes.tf          # Kubernetes resources for the workspace
+    vscode/                # VS Code defaults and locale
+    .github/               # CI workflows and PR/release rules
+    VERSION                # template version used by releases
+    README.md              # usage and operational docs
+```
 
 ### Security Configuration
 
