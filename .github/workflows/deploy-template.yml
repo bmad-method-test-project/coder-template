@@ -1,5 +1,5 @@
 name: Deploy Coder Template
-run-name: "Deploy Coder Template - Version: ${{ github.ref_name }}"
+run-name: "Deploy Coder Template - Version: ${{ github.event.release.tag_name ||github.ref_name }}"
 
 on:
   release:
