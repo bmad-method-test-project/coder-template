@@ -2,6 +2,20 @@ data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
 data "coder_provisioner" "me" {}
 
+
+data "coder_parameter" "project_name" {
+  name         = "project_name"
+  display_name = "Project Name"
+  description  = "Display name for the project (leave empty to use workspace name)"
+  default      = ""
+  type         = "string"
+  icon         = "/emojis/1f4c1.png"
+  mutable      = true
+}
+
+# Options for the number of CPU cores for the workspace. 
+# This is used in the `kubernetes_deployment_v1` resource to set the appropriate 
+# resource requests and limits for the workspace pod.
 data "coder_parameter" "cpu" {
   name         = "cpu"
   display_name = "CPU"
@@ -27,11 +41,16 @@ data "coder_parameter" "cpu" {
   }
 }
 
+# Amount of memory available to the workspace. 
+# This is used in the `kubernetes_deployment_v1` resource to set the appropriate 
+# resource requests and limits for the workspace pod.
 data "coder_parameter" "memory" {
   name         = "memory"
   display_name = "Memory"
   description  = "The amount of memory in GB"
   default      = "2"
+  type         = "number"
+  form_type    = "dropdown"
   icon         = "/icon/memory.svg"
   mutable      = true
   option {
@@ -52,11 +71,15 @@ data "coder_parameter" "memory" {
   }
 }
 
+# Amount of storage available to the workspace. IMMUTABLE.
+# This is used in the `kubernetes_persistent_volume_claim_v1` resource to set 
+# the appropriate storage request for the PVC that is mounted as the user's home 
+# directory in the workspace pod.
 data "coder_parameter" "home_disk_size" {
   name         = "home_disk_size"
   display_name = "Home disk size"
   description  = "The size of the home disk in GB"
-  default      = "10"
+  default      = "16"
   type         = "number"
   icon         = "/emojis/1f4be.png"
   mutable      = false
@@ -74,6 +97,9 @@ data "coder_parameter" "home_disk_size" {
   }
 }
 
+# The version of BMAD that should be used in the workspace. 
+# This is used in the `kubernetes_deployment_v1` resource to set the appropriate 
+# image tag for the workspace pod.
 data "coder_parameter" "bmad_version" {
   name         = "bmad_version"
   display_name = "BMAD Version"
@@ -81,6 +107,7 @@ data "coder_parameter" "bmad_version" {
   default      = "6"
   type         = "number"
   icon         = "/emojis/1f4e6.png"
+  form_type    = "radio"
   mutable      = false
   option {
     name  = "v4"
@@ -92,6 +119,8 @@ data "coder_parameter" "bmad_version" {
   }
 }
 
+# The maturity level of the project. 
+# Used during startup to format the Agent instructions.
 data "coder_parameter" "target_maturity_level" {
   name         = "target_maturity_level"
   display_name = "Target Maturity Level"
@@ -99,6 +128,7 @@ data "coder_parameter" "target_maturity_level" {
   default      = "1"
   type         = "number"
   icon         = "/emojis/1f4c8.png"
+  form_type    = "dropdown"
   mutable      = true
   option {
     name  = "L1 | Concept Demo"
@@ -118,6 +148,8 @@ data "coder_parameter" "target_maturity_level" {
   }
 }
 
+# The maturity level of the project. 
+# Used during startup to format the Agent instructions.
 data "coder_parameter" "user_technical_proficiency" {
   name         = "user_technical_proficiency"
   display_name = "User Technical Proficiency"
@@ -125,6 +157,7 @@ data "coder_parameter" "user_technical_proficiency" {
   default      = "2"
   type         = "number"
   icon         = "/emojis/1f9e0.png"
+  form_type    = "dropdown"
   mutable      = true
   option {
     name  = "Beginner"
@@ -140,6 +173,8 @@ data "coder_parameter" "user_technical_proficiency" {
   }
 }
 
+# The maturity level of the project. 
+# Used during startup to format the Agent instructions.
 data "coder_parameter" "communication_language" {
   name         = "communication_language"
   display_name = "Communication Language"
@@ -147,6 +182,7 @@ data "coder_parameter" "communication_language" {
   default      = "English"
   type         = "string"
   icon         = "/emojis/1f5e3.png"
+  form_type    = "radio"
   mutable      = true
   option {
     name  = "English"
@@ -158,6 +194,8 @@ data "coder_parameter" "communication_language" {
   }
 }
 
+# The maturity level of the project. 
+# Used during startup to format the Agent instructions.
 data "coder_parameter" "document_output_language" {
   name         = "document_output_language"
   display_name = "Document Output Language"
@@ -165,6 +203,7 @@ data "coder_parameter" "document_output_language" {
   default      = "English"
   type         = "string"
   icon         = "/emojis/1f4dd.png"
+  form_type    = "radio"
   mutable      = true
   option {
     name  = "English"
@@ -175,16 +214,3 @@ data "coder_parameter" "document_output_language" {
     value = "Deutsch"
   }
 }
-
-data "coder_parameter" "project_name" {
-  name         = "project_name"
-  display_name = "Project Name"
-  description  = "Display name for the project (leave empty to use workspace name)"
-  default      = ""
-  type         = "string"
-  icon         = "/emojis/1f4c1.png"
-  mutable      = true
-}
-
-
-

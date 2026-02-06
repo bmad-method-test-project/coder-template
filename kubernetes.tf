@@ -1,3 +1,11 @@
+# Request a Persistent Volume Claim for the user's home directory. 
+# This PVC will be mounted into the workspace container at /home/coder, which is 
+# the home directory of the 'coder' user in the coder workspace images. 
+# This PVC will persist across workspace restarts, ensuring that user data and 
+# settings are retained.
+# However, the PVC will "shadow" any files in the image at the mount path, 
+# which is why we copy project files to the PVC on startup in the deployment 
+# init script rather than baking them into the image.
 resource "kubernetes_persistent_volume_claim_v1" "home" {
   metadata {
     name      = "coder-${data.coder_workspace.me.id}-home"
@@ -28,6 +36,10 @@ resource "kubernetes_persistent_volume_claim_v1" "home" {
   }
 }
 
+# A Deployment ensures that a specified number of pod “replicas” are running at 
+# any one time. In other words, a Deployment makes sure that a pod or homogeneous 
+# set of pods are always up and available. 
+# The expected default value is "1" in our use-case.
 resource "kubernetes_deployment_v1" "main" {
   count = data.coder_workspace.me.start_count
   depends_on = [
