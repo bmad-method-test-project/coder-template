@@ -2,8 +2,6 @@
 
 Your PR title **must** follow Conventional Commits.
 
-## Allowed types (PR title prefix)
-
 Use one of these types at the start of the PR title:
 - `feat:` → **minor** release
 - `fix:` → **patch** release
