@@ -1,16 +1,4 @@
-terraform {
-  required_providers {
-    coder = {
-      source = "coder/coder"
-    }
-    kubernetes = {
-      source = "hashicorp/kubernetes"
-    }
-  }
-}
 
-provider "coder" {
-}
 
 variable "use_kubeconfig" {
   type        = bool
@@ -222,10 +210,6 @@ data "coder_parameter" "project_name" {
 }
 
 
-provider "kubernetes" {
-  # Authenticate via ~/.kube/config or a Coder-specific ServiceAccount, depending on admin preferences
-  config_path = var.use_kubeconfig == true ? "~/.kube/config" : null
-}
 
 data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
