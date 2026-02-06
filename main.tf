@@ -95,11 +95,132 @@ data "coder_parameter" "home_disk_size" {
   type         = "number"
   icon         = "/emojis/1f4be.png"
   mutable      = false
-  validation {
-    min = 1
-    max = 99999
+  option {
+    name  = "Small (16GB)"
+    value = "16"
+  }
+  option {
+    name  = "Medium (32GB)"
+    value = "32"
+  }
+  option {
+    name  = "Large (64GB)"
+    value = "64"
   }
 }
+
+data "coder_parameter" "bmad_version" {
+  name         = "bmad_version"
+  display_name = "BMAD Version"
+  description  = "The BMAD version to use"
+  default      = "6"
+  type         = "number"
+  icon         = "/emojis/1f4e6.png"
+  mutable      = false
+  option {
+    name  = "v4"
+    value = "4"
+  }
+  option {
+    name  = "v6"
+    value = "6"
+  }
+}
+
+data "coder_parameter" "target_maturity_level" {
+  name         = "target_maturity_level"
+  display_name = "Target Maturity Level"
+  description  = "What is the targeted maturity level for this workspace?"
+  default      = "1"
+  type         = "number"
+  icon         = "/emojis/1f4c8.png"
+  mutable      = true
+  option {
+    name  = "L1 | Concept Demo"
+    value = "1"
+  }
+  option {
+    name  = "L2 | Working Prototype"
+    value = "2"
+  }
+  option {
+    name  = "L3 | Releasable Solution"
+    value = "3"
+  }
+  option {
+    name  = "L4 | Enterprise-Ready"
+    value = "4"
+  }
+}
+
+data "coder_parameter" "user_technical_proficiency" {
+  name         = "user_technical_proficiency"
+  display_name = "User Technical Proficiency"
+  description  = "The user's technical proficiency level"
+  default      = "2"
+  type         = "number"
+  icon         = "/emojis/1f9e0.png"
+  mutable      = true
+  option {
+    name  = "Beginner"
+    value = "1"
+  }
+  option {
+    name  = "Intermediate"
+    value = "2"
+  }
+  option {
+    name  = "Expert"
+    value = "3"
+  }
+}
+
+data "coder_parameter" "communication_language" {
+  name         = "communication_language"
+  display_name = "Communication Language"
+  description  = "Language for AI agent communication"
+  default      = "English"
+  type         = "string"
+  icon         = "/emojis/1f5e3.png"
+  mutable      = true
+  option {
+    name  = "English"
+    value = "English"
+  }
+  option {
+    name  = "Deutsch"
+    value = "Deutsch"
+  }
+}
+
+data "coder_parameter" "document_output_language" {
+  name         = "document_output_language"
+  display_name = "Document Output Language"
+  description  = "Language for generated documents"
+  default      = "English"
+  type         = "string"
+  icon         = "/emojis/1f4dd.png"
+  mutable      = true
+  option {
+    name  = "English"
+    value = "English"
+  }
+  option {
+    name  = "Deutsch"
+    value = "Deutsch"
+  }
+}
+
+data "coder_parameter" "project_name" {
+  name         = "project_name"
+  display_name = "Project Name"
+  description  = "Display name for the project (leave empty to use workspace name)"
+  default      = ""
+  type         = "string"
+  icon         = "/emojis/1f4c1.png"
+  mutable      = true
+}
+
 
 provider "kubernetes" {
   # Authenticate via ~/.kube/config or a Coder-specific ServiceAccount, depending on admin preferences
@@ -116,6 +237,9 @@ locals {
   vscode_default_user_settings_json = file("${path.module}/vscode/user-settings.json")
   vscode_default_workspace_settings_json = file("${path.module}/vscode/workspace-settings.json")
   vscode_default_locale_json   = file("${path.module}/vscode/locale.json")
+  
+  # Select Docker image based on BMAD version
+  bmad_docker_image = data.coder_parameter.bmad_version.value == "4" ? "ghcr.io/bmad-method-test-project/bmad-coder-docker-v4:latest" : "ghcr.io/bmad-method-test-project/bmad-coder-docker-v6:latest"
 }
 
 resource "coder_agent" "main" {
@@ -150,6 +274,24 @@ resource "coder_agent" "main" {
     mise use --global nodejs
     mise use --global python@3.13
 
+    # Install jinja2 for configuration rendering
+    mise exec -- pip3 install --break-system-packages jinja2
+
+    # Render configuration files and AGENTS.md
+    mise exec -- python3 /usr/local/config/scripts/render-config.py \
+      --bmad-version "${data.coder_parameter.bmad_version.value}" \
+      --project-root "$HOME/project" \
+      --user-name "${data.coder_workspace_owner.me.name}" \
+      --communication-language "${data.coder_parameter.communication_language.value}" \
+      --document-output-language "${data.coder_parameter.document_output_language.value}" \
+      --project-name "${data.coder_parameter.project_name.value != "" ? data.coder_parameter.project_name.value : data.coder_workspace.me.name}" \
+      --user-technical-proficiency "${data.coder_parameter.user_technical_proficiency.value}" \
+      --target-maturity-level "${data.coder_parameter.target_maturity_level.value}"
+
+    # Seed VS Code default settings (versioned in the template)
+    mkdir -p "$HOME/.vscode-server/data/Machine"
+    cat <<'JSON' > "$HOME/.vscode-server/data/Machine/settings.json"
+${local.vscode_default_settings_json}
     # Seed VS Code default User settings (versioned in the template)
     mkdir -p "$HOME/.vscode-server/data/User"
     cat <<'JSON' > "$HOME/.vscode-server/data/User/settings.json"
@@ -409,7 +551,7 @@ resource "kubernetes_deployment_v1" "main" {
 
         container {
           name              = "dev"
-          image             = "ghcr.io/bmad-method-test-project/bmad-coder-docker:latest"
+          image             = local.bmad_docker_image
           image_pull_policy = "Always"
           command           = ["sh", "-c", coder_agent.main.init_script]
           security_context {
