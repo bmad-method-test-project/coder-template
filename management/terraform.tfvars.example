@@ -1,0 +1,28 @@
+# Example terraform.tfvars file
+# Copy this to terraform.tfvars and customize for your deployment
+
+# Template identification
+template_name         = "bmad-standard"
+template_display_name = "BMAD Method Standard Template"
+template_description  = "Standard development environment for BMAD Method projects on Kubernetes"
+
+# Version information
+version_name      = "v1.8.3"
+version_message   = "Initial deployment via coderd provider"
+version_is_active = true
+
+# Kubernetes configuration
+namespace        = "coder"
+use_kubeconfig   = false
+bmad_cli_version = "latest"
+
+# Workspace behavior
+default_ttl_ms                   = 0       # 0 = no auto-stop
+activity_bump_ms                 = 3600000 # 1 hour
+allow_user_cancel_workspace_jobs = true
+allow_user_auto_start            = true
+allow_user_auto_stop             = true
+
+# Optional: Coder connection (if not using env vars)
+# coder_url           = "https://coder.example.com"
+# coder_session_token = "your-session-token-here"

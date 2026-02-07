@@ -28,15 +28,22 @@ This repository contains Terraform-based templates for **Coder Community Edition
 - Use namespaces for workspace isolation
 - Configure resource limits (CPU, memory) appropriately
 
-### GitHub Actions
-- **Deployment Workflow**: Automates template deployment to Coder
-  - Triggered on pushes to `main` branch
-- **Coder CLI**: https://coder.com/docs/reference/cli
-  - Notes on managing templates using the CLI: https://coder.com/docs/admin/templates/managing-templates/change-management#coder-cli
-- **Setup Coder Action for GitHub**: https://github.com/coder/setup-action
-- Templates are pushed using `coder template push` command
-- Authentication via `CODER_URL` and `CODER_SESSION_TOKEN` secrets
-- Coder provides the coderd Terraform provider for managing templates: https://coder.com/docs/admin/templates/managing-templates/change-management
+### GitHub Actions & Template Deployment
+- **Two Deployment Approaches**:
+  1. **Coderd Provider (Recommended)**: Infrastructure as Code via Terraform
+     - Workflow: `.github/workflows/deploy-template-terraform.yml`
+     - Configuration: `management/` directory
+     - Provider: https://registry.terraform.io/providers/coder/coderd/latest/docs
+     - Declarative, state-managed, version-controlled
+  2. **Coder CLI (Legacy)**: Imperative deployment via CLI commands
+     - Workflow: `.github/workflows/deploy-template.yml`
+     - CLI Reference: https://coder.com/docs/reference/cli
+     - Coder Setup Action: https://github.com/coder/setup-action
+- **Coderd Provider Management**: 
+  - Template deployment: https://coder.com/docs/admin/templates/managing-templates/change-management
+  - Resource documentation: https://registry.terraform.io/providers/coder/coderd/latest/docs/resources/template
+  - See `management/README.md` for detailed setup
+- Authentication via `CODER_URL` and `CODER_SESSION_TOKEN` environment variables/secrets
 
 ## Template Structure Guidelines
 
@@ -199,6 +206,45 @@ resource "coder_app" "code_server" {
   - Separate subject from body with a blank line.
   - Use the body to explain what and why vs. how.
 - Include issue references in commit messages when applicable.
+
+## Repository Structure
+
+This repository is organized into two main parts:
+
+1. **Workspace Template** (`/` root) - Defines what runs inside workspaces
+2. **Template Management** (`/management/`) - Defines how the template is deployed
+
+```
+coder-template/
+  # Workspace Template (what runs inside workspaces)
+  main.tf                # entrypoint wiring data, locals, and resources
+  variables.tf           # input variables for the workspace 
+  locals.tf              # derived values used across resources
+  providers.tf           # Terraform providers (coder, kubernetes)
+  data.tf                # Coder/Kubernetes data sources and parameters
+  kubernetes.tf          # Kubernetes resources for the workspace
+  vscode/                # VS Code defaults and locale
+    
+  # Template Management (how the template is deployed to Coder)
+  management/            # Coderd provider for template deployment
+    main.tf            # coderd_template resource
+    providers.tf       # coderd provider configuration
+    variables.tf       # deployment variables
+    outputs.tf         # deployment outputs
+    README.md          # deployment documentation
+    QUICKSTART.md      # getting started guide
+    CLI-vs-TERRAFORM.md # comparison of approaches
+    
+  # CI/CD and Documentation
+  .github/
+    workflows/
+      deploy-template-terraform.yml  # Terraform deployment (recommended)
+      deploy-template.yml            # CLI deployment (legacy)
+  VERSION                # template version for releases
+  README.md              # main documentation
+```
+
+**Important**: The `management/` directory uses the `coderd` provider to deploy and manage the template itself, while the root directory files define the workspace infrastructure that users will provision.
 
 ## Documentation Guidelines
 - Keep README.md up to date with major changes.

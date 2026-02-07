@@ -12,11 +12,31 @@ Create new [Coder workspaces](https://coder.com/docs/workspaces) with this templ
 
 ## Automated Deployment (GitHub Actions)
 
-This repository includes an automated deployment workflow at `.github/workflows/deploy-template.yml`.
+This repository supports two deployment approaches:
 
-- Trigger: The deployment runs when a Git tag is created and pushed. Use GitHub Releases to publish a new version (recommended) — the release tag (for example `v0.1.0`) is used as the template `--name` and embedded in the push `--message`.
-- Branch pushes: Merges to `main` run validation (init/fmt/validate) but do not publish a new template version unless a tag is present.
-- Variables: The workflow reads GitHub environment/repository variables `CODER_URL`, `TEMPLATE_NAME`, `NAMESPACE`, `USE_KUBECONFIG`, `BMAD_CLI_VERSION`, and the secret `CODER_TOKEN` for authentication.
+### Option 1: Terraform with coderd Provider (Recommended)
+
+Uses the `coderd` Terraform provider for declarative template management.
+
+**Workflow**: `.github/workflows/deploy-template-terraform.yml`
+
+**Advantages**:
+- Infrastructure as Code - all configuration in Git
+- State management - tracks template versions
+- Better CI/CD integration
+- Works with Dev Containers or regular Docker templates
+
+**Configuration**: See `management/README.md` for detailed setup instructions.
+
+### Option 2: Coder CLI (Legacy)
+
+Uses the `coder template push` CLI command.
+
+**Workflow**: `.github/workflows/deploy-template.yml`
+
+**Trigger**: The deployment runs when a Git tag is created and pushed. Use GitHub Releases to publish a new version (recommended) — the release tag (for example `v0.1.0`) is used as the template `--name` and embedded in the push `--message`.
+
+**Variables**: The workflow reads GitHub environment/repository variables `CODER_URL`, `TEMPLATE_NAME`, `NAMESPACE`, `USE_KUBECONFIG`, `BMAD_CLI_VERSION`, and the secret `CODER_TOKEN` for authentication.
 
 ### PR title conventions (required)
 
@@ -54,15 +74,51 @@ git push origin v0.1.0
 
 This will trigger the same deployment logic using the tag name.
 
-## Manually pushing
+## Manual Deployment
 
-Alternatively, you can push the Template yourself
+You can deploy templates manually using either approach:
+
+### Using Terraform (Recommended)
+
+1. **Navigate to management directory**:
+   ```bash
+   cd management
+   ```
+
+2. **Create configuration**:
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   # Edit terraform.tfvars with your values
+   ```
+
+3. **Set authentication**:
+   ```bash
+   export CODER_URL="http://4.185.67.4"
+   export CODER_SESSION_TOKEN="your-token"
+   ```
+
+4. **Deploy**:
+   ```bash
+   terraform init
+   terraform plan
+   terraform apply
+   ```
+
+See `management/README.md` for complete documentation.
+
+### Using Coder CLI (Legacy)
 
 1. Download the Coder CLI from the official source: https://coder.com/docs/install/cli
-2. Sign in using `coder login https://coder.example.com``
-3. Use this command to push the changes from this repo to the Coder installation
+2. Smanagement/            # Template deployment with coderd provider
+        main.tf            # coderd_template resource
+        providers.tf       # coderd provider configuration
+        variables.tf       # deployment variables
+        outputs.tf         # deployment outputs
+        README.md          # detailed deployment documentation
+    ign in using `coder login https://coder.example.com`
+3. Use this command to push the changes from this repo to the Coder installation:
     ```bash
-    coder template push bmad-standard\
+    coder template push bmad-standard \
                 --directory . \
                 --name "< create a unique version name >" \
                 --variable "use_kubeconfig=false" \
